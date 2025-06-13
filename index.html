@@ -1,0 +1,703 @@
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torneio EA FC 25</title>
+    <script type="text/javascript" src="https://gc.kes.v2.scr.kaspersky-labs.com/7EA5E9BB-55E1-4C31-9C21-4943DDFED2E4/main.js?attr=7a7O_lHUiKR_36A9l--JlGiSr-p8Y7YzuxkAN2OiUqormWqJ9hgvoZajRZh9GfJKvmA1QnwtcmX__3CpHIR7KREbbPdd40zRBBT9vvbGjRb5i_fLARJHxywOQG4Q_16sAzRj61LOEE9B_ban6QbD9mhbhpkQnbYayzqYX5YDRLfFDC3veakeuRxNB4NWPPt2Wm6lnPHS4pNZBkUv-_ASlQ" charset="UTF-8"></script><script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        
+        .dark body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+        
+        .bracket-line {
+            position: absolute;
+            background-color: #94a3b8;
+            z-index: 0;
+        }
+        
+        .bracket-vertical {
+            width: 2px;
+        }
+        
+        .bracket-horizontal {
+            height: 2px;
+        }
+        
+        .team-card {
+            transition: all 0.3s ease;
+        }
+        
+        .team-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .winner {
+            border: 2px solid #10b981;
+        }
+        
+        .podium-1 {
+            background: linear-gradient(135deg, #fef08a 0%, #fbbf24 100%);
+            border: 2px solid #f59e0b;
+        }
+        
+        .podium-2 {
+            background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+            border: 2px solid #64748b;
+        }
+        
+        .podium-3 {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            border: 2px solid #ea580c;
+        }
+        
+        .bracket-container {
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+        
+        .bracket-container::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .bracket-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        .bracket-container::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 20px;
+        }
+        
+        .dark .bracket-container::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        
+        .dark .bracket-container::-webkit-scrollbar-thumb {
+            background-color: #475569;
+        }
+        
+        @media (max-width: 768px) {
+            .bracket-container {
+                padding-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div id="app" class="container mx-auto px-4 py-8 max-w-7xl">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">Torneio EA FC 25</h1>
+                <p class="text-slate-600 dark:text-slate-400">16 participantes, 16 times, 1 campeão</p>
+            </div>
+            <div class="flex items-center space-x-4 mt-4 md:mt-0">
+                <button id="darkModeToggle" class="p-2 rounded-full bg-slate-200 dark:bg-slate-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+                <button id="exportButton" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Exportar
+                </button>
+            </div>
+        </header>
+
+        <div id="sorteioSection" class="mb-12">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold">Sorteio de Times</h2>
+                <button id="sortearButton" class="mt-4 md:mt-0 px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200">
+                    Sortear Times
+                </button>
+            </div>
+            <div id="sorteioResultado" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Cards de sorteio serão inseridos aqui -->
+            </div>
+        </div>
+
+        <div id="chaveamentoSection" class="mb-12 hidden">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold">Chaveamento</h2>
+                <button id="proximaFaseButton" class="mt-4 md:mt-0 px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200 hidden">
+                    Próxima Fase
+                </button>
+            </div>
+            <div class="bracket-container relative">
+                <div id="bracket" class="flex justify-center min-w-[1000px] py-8">
+                    <!-- Chaveamento será inserido aqui -->
+                </div>
+            </div>
+        </div>
+
+        <div id="podiumSection" class="mb-12 hidden">
+            <h2 class="text-2xl font-semibold mb-6">Pódio</h2>
+            <div class="flex flex-col md:flex-row justify-center items-end space-y-4 md:space-y-0 md:space-x-8">
+                <div id="segundo" class="order-2 md:order-1 podium-card w-full md:w-64 h-64 flex flex-col items-center justify-center rounded-lg podium-2 shadow-lg">
+                    <div class="text-4xl mb-2">🥈</div>
+                    <div class="w-20 h-20 mb-2 flex items-center justify-center">
+                        <!-- Escudo do time -->
+                    </div>
+                    <div class="text-center">
+                        <p class="font-bold text-lg player-name"></p>
+                        <p class="text-md team-name"></p>
+                    </div>
+                </div>
+                <div id="primeiro" class="order-1 md:order-2 podium-card w-full md:w-64 h-72 flex flex-col items-center justify-center rounded-lg podium-1 shadow-lg">
+                    <div class="text-4xl mb-2">🥇</div>
+                    <div class="w-24 h-24 mb-2 flex items-center justify-center">
+                        <!-- Escudo do time -->
+                    </div>
+                    <div class="text-center">
+                        <p class="font-bold text-xl player-name"></p>
+                        <p class="text-lg team-name"></p>
+                    </div>
+                </div>
+                <div id="terceiro" class="order-3 podium-card w-full md:w-64 h-56 flex flex-col items-center justify-center rounded-lg podium-3 shadow-lg">
+                    <div class="text-4xl mb-2">🥉</div>
+                    <div class="w-16 h-16 mb-2 flex items-center justify-center">
+                        <!-- Escudo do time -->
+                    </div>
+                    <div class="text-center">
+                        <p class="font-bold text-lg player-name"></p>
+                        <p class="text-md team-name"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados dos participantes e times
+        const participantes = ["Carlos", "Ana", "Pedro", "Marina", "Lucas", "Fernanda", "Ricardo", "Beatriz", "Diego", "Camila", "Gabriel", "Juliana", "Marcos", "Laura", "Rodrigo", "Isabela"];
+        
+        const times = [
+            { nome: "Arsenal", escudo: "https://upload.wikimedia.org/wikipedia/pt/thumb/5/53/Arsenal_FC.svg/292px-Arsenal_FC.svg.png?20250124153222" },
+            { nome: "Barcelona", escudo: "https://upload.wikimedia.org/wikipedia/pt/thumb/4/43/FCBarcelona.svg/142px-FCBarcelona.svg.png?20100902144544" },
+            { nome: "Bayern de Munique", escudo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg/512px-FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg.png" },
+            { nome: "Bayer Leverkusen", escudo: "https://upload.wikimedia.org/wikipedia/pt/a/a2/Bayer_Leverkusen.png?20100911182002" },
+            { nome: "Borussia Dortmund", escudo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Borussia_Dortmund_logo.svg/512px-Borussia_Dortmund_logo.svg.png" },
+            { nome: "Chelsea", escudo: "https://logodownload.org/wp-content/uploads/2017/02/chelsea-fc-logo-escudo.png" },
+            { nome: "Inter de Milão", escudo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/FC_Internazionale_Milano_2021.svg/512px-FC_Internazionale_Milano_2021.svg.png" },
+            { nome: "Milan", escudo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Logo_of_AC_Milan.svg/361px-Logo_of_AC_Milan.svg.png" },
+            { nome: "Tottenham", escudo: "https://logodownload.org/wp-content/uploads/2018/11/tottenham-logo-escudo.png" },
+            { nome: "Liverpool", escudo: "https://logodownload.org/wp-content/uploads/2017/02/liverpool-fc-logo-escudo.png" },
+            { nome: "Real Madrid", escudo: "https://upload.wikimedia.org/wikipedia/pt/9/98/Real_Madrid.png?20231214020756" },
+            { nome: "Juventus", escudo: "https://upload.wikimedia.org/wikipedia/commons/5/51/Juventus_FC_2017_logo.png" },
+            { nome: "Atlético de Madrid", escudo: "https://upload.wikimedia.org/wikipedia/pt/thumb/c/c1/Atletico_Madrid_logo.svg/378px-Atletico_Madrid_logo.svg.png?20100911155031" },
+            { nome: "Paris Saint Germain", escudo: "https://logodownload.org/wp-content/uploads/2017/02/psg-logo-escudo-paris-saint-germain.png" },
+            { nome: "Manchester City", escudo: "https://upload.wikimedia.org/wikipedia/pt/0/02/Manchester_City_Football_Club.png" },
+            { nome: "Manchester United", escudo: "https://logodownload.org/wp-content/uploads/2016/10/manchester-united-logo-escudo.png" }
+        ];
+
+        // Estado da aplicação
+        let estado = {
+            sorteioRealizado: false,
+            faseAtual: 0, // 0: oitavas, 1: quartas, 2: semi, 3: final/3º lugar
+            participantesTimes: [],
+            chaveamento: {
+                oitavas: [],
+                quartas: [],
+                semi: [],
+                final: [],
+                terceiro: []
+            },
+            vencedores: {
+                oitavas: [],
+                quartas: [],
+                semi: [],
+                final: null,
+                terceiro: null
+            },
+            perdedoresSemi: []
+        };
+
+        // Elementos DOM
+        const sortearButton = document.getElementById('sortearButton');
+        const sorteioResultado = document.getElementById('sorteioResultado');
+        const chaveamentoSection = document.getElementById('chaveamentoSection');
+        const proximaFaseButton = document.getElementById('proximaFaseButton');
+        const podiumSection = document.getElementById('podiumSection');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const exportButton = document.getElementById('exportButton');
+
+        // Verificar preferência de tema
+        if (localStorage.getItem('darkMode') === 'true' || 
+            (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && 
+             localStorage.getItem('darkMode') !== 'false')) {
+            document.documentElement.classList.add('dark');
+        }
+
+        // Alternar modo escuro
+        darkModeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+        });
+
+        // Exportar como imagem
+        exportButton.addEventListener('click', () => {
+            html2canvas(document.getElementById('app')).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'torneio-ea-fc-25.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        });
+
+        // Função para embaralhar array
+        function embaralhar(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Função para sortear times
+        function sortearTimes() {
+            const participantesEmbaralhados = embaralhar(participantes);
+            const timesEmbaralhados = embaralhar(times);
+            
+            estado.participantesTimes = participantesEmbaralhados.map((participante, index) => ({
+                participante,
+                time: timesEmbaralhados[index]
+            }));
+            
+            estado.sorteioRealizado = true;
+            renderizarSorteio();
+            
+            // Mostrar seção de chaveamento
+            chaveamentoSection.classList.remove('hidden');
+            proximaFaseButton.classList.remove('hidden');
+            
+            // Gerar chaveamento inicial (oitavas)
+            gerarOitavas();
+            renderizarChaveamento();
+            
+            // Efeito confetti
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        // Renderizar cards de sorteio
+        function renderizarSorteio() {
+            sorteioResultado.innerHTML = '';
+            
+            estado.participantesTimes.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'team-card bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 flex flex-col items-center';
+                card.innerHTML = `
+                    <div class="w-16 h-16 mb-3 flex items-center justify-center">
+                        <img src="${item.time.escudo}" alt="${item.time.nome}" class="max-w-full max-h-full object-contain">
+                    </div>
+                    <h3 class="font-semibold text-lg">${item.participante}</h3>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm">${item.time.nome}</p>
+                    <div class="mt-3 w-full">
+                        <select class="team-select w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 text-sm" data-index="${index}">
+                            ${times.map(t => `<option value="${t.nome}" ${t.nome === item.time.nome ? 'selected' : ''}>${t.nome}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+                sorteioResultado.appendChild(card);
+            });
+            
+            // Adicionar event listeners para os selects
+            document.querySelectorAll('.team-select').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const novoTime = times.find(t => t.nome === e.target.value);
+                    estado.participantesTimes[index].time = novoTime;
+                    
+                    // Atualizar o chaveamento se já tiver sido gerado
+                    if (estado.chaveamento.oitavas.length > 0) {
+                        atualizarChaveamento();
+                    }
+                });
+            });
+        }
+
+        // Gerar chaveamento de oitavas
+        function gerarOitavas() {
+            estado.chaveamento.oitavas = [];
+            
+            // Criar 8 confrontos para as oitavas
+            for (let i = 0; i < 16; i += 2) {
+                estado.chaveamento.oitavas.push({
+                    time1: estado.participantesTimes[i],
+                    time2: estado.participantesTimes[i + 1]
+                });
+            }
+        }
+
+        // Atualizar chaveamento quando times são alterados
+        function atualizarChaveamento() {
+            // Recria as oitavas com os times atualizados
+            gerarOitavas();
+            
+            // Limpa as fases seguintes
+            estado.chaveamento.quartas = [];
+            estado.chaveamento.semi = [];
+            estado.chaveamento.final = [];
+            estado.chaveamento.terceiro = [];
+            
+            estado.vencedores = {
+                oitavas: [],
+                quartas: [],
+                semi: [],
+                final: null,
+                terceiro: null
+            };
+            
+            estado.perdedoresSemi = [];
+            estado.faseAtual = 0;
+            
+            renderizarChaveamento();
+        }
+
+        // Renderizar chaveamento
+        function renderizarChaveamento() {
+            const bracket = document.getElementById('bracket');
+            bracket.innerHTML = '';
+            
+            // Criar colunas para cada fase
+            const colunas = ['oitavas', 'quartas', 'semi', 'final'].map(fase => {
+                const coluna = document.createElement('div');
+                coluna.className = 'flex flex-col justify-around mx-4 relative';
+                coluna.id = `coluna-${fase}`;
+                return coluna;
+            });
+            
+            // Adicionar colunas ao bracket
+            colunas.forEach(coluna => bracket.appendChild(coluna));
+            
+            // Renderizar oitavas
+            const colunaOitavas = document.getElementById('coluna-oitavas');
+            estado.chaveamento.oitavas.forEach((confronto, index) => {
+                const matchCard = criarCardConfrontoDuplo(confronto, 'oitavas', index);
+                colunaOitavas.appendChild(matchCard);
+            });
+            
+            // Renderizar quartas
+            const colunaQuartas = document.getElementById('coluna-quartas');
+            if (estado.chaveamento.quartas.length > 0) {
+                estado.chaveamento.quartas.forEach((confronto, index) => {
+                    const matchCard = criarCardConfrontoDuplo(confronto, 'quartas', index);
+                    colunaQuartas.appendChild(matchCard);
+                });
+            } else {
+                // Placeholders para quartas
+                for (let i = 0; i < 4; i++) {
+                    const placeholder = criarPlaceholder();
+                    colunaQuartas.appendChild(placeholder);
+                }
+            }
+            
+            // Renderizar semi
+            const colunaSemi = document.getElementById('coluna-semi');
+            if (estado.chaveamento.semi.length > 0) {
+                estado.chaveamento.semi.forEach((confronto, index) => {
+                    const matchCard = criarCardConfrontoDuplo(confronto, 'semi', index);
+                    colunaSemi.appendChild(matchCard);
+                });
+            } else {
+                // Placeholders para semi
+                for (let i = 0; i < 2; i++) {
+                    const placeholder = criarPlaceholder();
+                    colunaSemi.appendChild(placeholder);
+                }
+            }
+            
+            // Renderizar final e 3º lugar
+            const colunaFinal = document.getElementById('coluna-final');
+            if (estado.chaveamento.final.length > 0) {
+                // Final
+                const finalCard = criarCardConfrontoDuplo(estado.chaveamento.final[0], 'final', 0);
+                finalCard.classList.add('mb-8');
+                
+                // 3º lugar
+                const terceiroCard = criarCardConfrontoDuplo(estado.chaveamento.terceiro[0], 'terceiro', 0);
+                terceiroCard.classList.add('mt-8');
+                
+                colunaFinal.appendChild(finalCard);
+                colunaFinal.appendChild(terceiroCard);
+            } else {
+                // Placeholders para final e 3º lugar
+                const placeholderFinal = criarPlaceholder();
+                placeholderFinal.classList.add('mb-8');
+                
+                const placeholderTerceiro = criarPlaceholder();
+                placeholderTerceiro.classList.add('mt-8');
+                
+                colunaFinal.appendChild(placeholderFinal);
+                colunaFinal.appendChild(placeholderTerceiro);
+            }
+            
+            // Atualizar texto do botão de próxima fase
+            atualizarBotaoProximaFase();
+        }
+
+        // Criar card de confronto duplo (dois times)
+        function criarCardConfrontoDuplo(confronto, fase, index) {
+            const card = document.createElement('div');
+            card.className = 'bg-white dark:bg-slate-800 rounded-lg shadow-md p-3 mb-4 w-64 relative z-10';
+            
+            // Se o confronto ainda não foi definido
+            if (!confronto || !confronto.time1 || !confronto.time2) {
+                card.innerHTML = `
+                    <div class="flex justify-center items-center h-24">
+                        <p class="text-slate-400 dark:text-slate-500">Aguardando...</p>
+                    </div>
+                `;
+                return card;
+            }
+            
+            // Verificar se há vencedor para este confronto
+            const vencedores = estado.vencedores[fase];
+            const vencedor = vencedores && vencedores[index];
+            
+            // Criar time 1
+            const time1El = document.createElement('div');
+            time1El.className = `flex items-center p-2 rounded-md mb-2 cursor-pointer ${vencedor === confronto.time1 ? 'winner bg-green-50 dark:bg-green-900/20' : ''}`;
+            time1El.innerHTML = `
+                <div class="w-8 h-8 mr-2 flex-shrink-0">
+                    <img src="${confronto.time1.time.escudo}" alt="${confronto.time1.time.nome}" class="max-w-full max-h-full object-contain">
+                </div>
+                <div class="flex-grow">
+                    <p class="font-medium text-sm">${confronto.time1.participante}</p>
+                    <p class="text-xs text-slate-600 dark:text-slate-400">${confronto.time1.time.nome}</p>
+                </div>
+            `;
+            
+            // Criar time 2
+            const time2El = document.createElement('div');
+            time2El.className = `flex items-center p-2 rounded-md cursor-pointer ${vencedor === confronto.time2 ? 'winner bg-green-50 dark:bg-green-900/20' : ''}`;
+            time2El.innerHTML = `
+                <div class="w-8 h-8 mr-2 flex-shrink-0">
+                    <img src="${confronto.time2.time.escudo}" alt="${confronto.time2.time.nome}" class="max-w-full max-h-full object-contain">
+                </div>
+                <div class="flex-grow">
+                    <p class="font-medium text-sm">${confronto.time2.participante}</p>
+                    <p class="text-xs text-slate-600 dark:text-slate-400">${confronto.time2.time.nome}</p>
+                </div>
+            `;
+            
+            // Adicionar event listeners para selecionar vencedor
+            if (fase === 'oitavas' && estado.faseAtual === 0 || 
+                fase === 'quartas' && estado.faseAtual === 1 || 
+                fase === 'semi' && estado.faseAtual === 2 || 
+                (fase === 'final' || fase === 'terceiro') && estado.faseAtual === 3) {
+                
+                time1El.addEventListener('click', () => {
+                    selecionarVencedor(fase, index, confronto.time1);
+                });
+                
+                time2El.addEventListener('click', () => {
+                    selecionarVencedor(fase, index, confronto.time2);
+                });
+            }
+            
+            card.appendChild(time1El);
+            card.appendChild(time2El);
+            
+            return card;
+        }
+
+        // Criar placeholder para confrontos futuros
+        function criarPlaceholder() {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'bg-white/50 dark:bg-slate-800/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 p-3 mb-4 w-64 h-24 flex items-center justify-center';
+            placeholder.innerHTML = `
+                <p class="text-slate-400 dark:text-slate-500 text-sm">Aguardando confronto...</p>
+            `;
+            return placeholder;
+        }
+
+        // Selecionar vencedor de um confronto
+        function selecionarVencedor(fase, index, time) {
+            // Atualizar estado
+            if (!estado.vencedores[fase]) {
+                estado.vencedores[fase] = [];
+            }
+            
+            estado.vencedores[fase][index] = time;
+            
+            // Se for semifinal, guardar o perdedor para disputa de 3º lugar
+            if (fase === 'semi') {
+                const confronto = estado.chaveamento.semi[index];
+                const perdedor = time === confronto.time1 ? confronto.time2 : confronto.time1;
+                estado.perdedoresSemi[index] = perdedor;
+            }
+            
+            // Renderizar novamente para mostrar o vencedor selecionado
+            renderizarChaveamento();
+        }
+
+        // Avançar para próxima fase
+        function proximaFase() {
+            const fases = ['oitavas', 'quartas', 'semi', 'final'];
+            const faseAtual = fases[estado.faseAtual];
+            const vencedores = estado.vencedores[faseAtual];
+            
+            // Verificar se todos os vencedores foram selecionados
+            if (!vencedores || vencedores.length !== estado.chaveamento[faseAtual].length || 
+                vencedores.some(v => !v)) {
+                alert('Selecione todos os vencedores antes de avançar para a próxima fase!');
+                return;
+            }
+            
+            // Avançar para próxima fase
+            estado.faseAtual++;
+            
+            // Gerar confrontos da próxima fase
+            switch (estado.faseAtual) {
+                case 1: // Quartas
+                    gerarQuartas();
+                    break;
+                case 2: // Semi
+                    gerarSemi();
+                    break;
+                case 3: // Final e 3º lugar
+                    gerarFinalETerceiro();
+                    break;
+                case 4: // Finalizar torneio
+                    finalizarTorneio();
+                    return;
+            }
+            
+            renderizarChaveamento();
+        }
+
+        // Gerar quartas de final
+        function gerarQuartas() {
+            estado.chaveamento.quartas = [];
+            
+            for (let i = 0; i < 8; i += 2) {
+                estado.chaveamento.quartas.push({
+                    time1: estado.vencedores.oitavas[i],
+                    time2: estado.vencedores.oitavas[i + 1]
+                });
+            }
+        }
+
+        // Gerar semifinais
+        function gerarSemi() {
+            estado.chaveamento.semi = [];
+            
+            for (let i = 0; i < 4; i += 2) {
+                estado.chaveamento.semi.push({
+                    time1: estado.vencedores.quartas[i],
+                    time2: estado.vencedores.quartas[i + 1]
+                });
+            }
+        }
+
+        // Gerar final e disputa de 3º lugar
+        function gerarFinalETerceiro() {
+            estado.chaveamento.final = [{
+                time1: estado.vencedores.semi[0],
+                time2: estado.vencedores.semi[1]
+            }];
+            
+            estado.chaveamento.terceiro = [{
+                time1: estado.perdedoresSemi[0],
+                time2: estado.perdedoresSemi[1]
+            }];
+        }
+
+        // Finalizar torneio e mostrar pódio
+        function finalizarTorneio() {
+            // Verificar se temos vencedores da final e do 3º lugar
+            if (!estado.vencedores.final || !estado.vencedores.terceiro) {
+                alert('Selecione os vencedores da final e da disputa de 3º lugar!');
+                return;
+            }
+            
+            // Determinar 2º lugar (perdedor da final)
+            const finalMatch = estado.chaveamento.final[0];
+            const segundo = estado.vencedores.final === finalMatch.time1 ? finalMatch.time2 : finalMatch.time1;
+            
+            // Mostrar pódio
+            mostrarPodio(estado.vencedores.final, segundo, estado.vencedores.terceiro);
+        }
+
+        // Mostrar pódio
+        function mostrarPodio(primeiro, segundo, terceiro) {
+            podiumSection.classList.remove('hidden');
+            
+            // Primeiro lugar
+            const primeiroEl = document.getElementById('primeiro');
+            primeiroEl.querySelector('.player-name').textContent = primeiro.participante;
+            primeiroEl.querySelector('.team-name').textContent = primeiro.time.nome;
+            primeiroEl.querySelector('div:nth-child(2)').innerHTML = `
+                <img src="${primeiro.time.escudo}" alt="${primeiro.time.nome}" class="max-w-full max-h-full object-contain">
+            `;
+            
+            // Segundo lugar
+            const segundoEl = document.getElementById('segundo');
+            segundoEl.querySelector('.player-name').textContent = segundo.participante;
+            segundoEl.querySelector('.team-name').textContent = segundo.time.nome;
+            segundoEl.querySelector('div:nth-child(2)').innerHTML = `
+                <img src="${segundo.time.escudo}" alt="${segundo.time.nome}" class="max-w-full max-h-full object-contain">
+            `;
+            
+            // Terceiro lugar
+            const terceiroEl = document.getElementById('terceiro');
+            terceiroEl.querySelector('.player-name').textContent = terceiro.participante;
+            terceiroEl.querySelector('.team-name').textContent = terceiro.time.nome;
+            terceiroEl.querySelector('div:nth-child(2)').innerHTML = `
+                <img src="${terceiro.time.escudo}" alt="${terceiro.time.nome}" class="max-w-full max-h-full object-contain">
+            `;
+            
+            // Efeito confetti para o campeão
+            confetti({
+                particleCount: 200,
+                spread: 100,
+                origin: { y: 0.5 },
+                colors: ['#fbbf24', '#f59e0b', '#d97706']
+            });
+            
+            // Esconder botão de próxima fase
+            proximaFaseButton.classList.add('hidden');
+            
+            // Scroll para o pódio
+            podiumSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Atualizar texto do botão de próxima fase
+        function atualizarBotaoProximaFase() {
+            const textos = [
+                'Avançar para Quartas de Final',
+                'Avançar para Semifinais',
+                'Avançar para Final',
+                'Finalizar Torneio'
+            ];
+            
+            proximaFaseButton.textContent = textos[estado.faseAtual];
+        }
+
+        // Event listeners
+        sortearButton.addEventListener('click', sortearTimes);
+        proximaFaseButton.addEventListener('click', proximaFase);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'94f3b67370e3fefc',t:'MTc0OTgzOTk4Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
